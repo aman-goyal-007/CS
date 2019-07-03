@@ -1,112 +1,83 @@
-package com.cs.aman.ordermatching.entity;
+package com.cs.aman.ordermatching.service.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cs.aman.ordermatching.AskComparator;
-import com.cs.aman.ordermatching.BidComparator;
+import com.cs.aman.ordermatching.entity.Order;
+import com.cs.aman.ordermatching.entity.OrderBook;
+import com.cs.aman.ordermatching.entity.Stock;
 import com.cs.aman.ordermatching.enums.TransactionType;
 import com.cs.aman.ordermatching.exception.InvalidPriceException;
+import com.cs.aman.ordermatching.service.OrderBookService;
 
-public class OrderBook {
-	Logger logger = LoggerFactory.getLogger(OrderBook.class);
+public class OrderBookServiceImpl implements OrderBookService{
 
-	private final Stock stock;
-	
-	private Queue<Order> bidOrders;
-	
-	private Queue<Order> askOrders;
-	
-	static final int INITIALCAPACITY = 7000;
-	
-	public OrderBook(Stock stock){
-		this.stock = stock;
-		
-		bidOrders = new PriorityBlockingQueue<>(INITIALCAPACITY,new BidComparator());
-		
-		askOrders = new PriorityBlockingQueue<>(INITIALCAPACITY, new AskComparator());
+	Logger logger = LoggerFactory.getLogger(OrderBookServiceImpl.class);
 
+	public OrderBook createOrderBook(Stock stock) {
+		return new OrderBook(stock);
 	}
-
-	public Stock getStock() {
-		return stock;
-	}
-
-	public Queue<Order> getBidOrders() {
-		return bidOrders;
-	}
-
-	public Queue<Order> getAskOrders() {
-		return askOrders;
-	}
-
-	public boolean addAskOrder(Order newOrder) throws Exception {
+	
+	
+	public boolean addAskOrder(OrderBook orderBook, Order newOrder) throws Exception {
 		if(newOrder.getPrice() <= 0) {
 			Exception invalidPriceException = new InvalidPriceException();
 			logger.error("error in add bid order",invalidPriceException);
 			throw invalidPriceException;
 		}
-		return askOrders.add(newOrder);
+		return orderBook.getAskOrders().add(newOrder);
 	}
 	
-	public boolean addBidOrder(Order newOrder) throws Exception {
+	public boolean addBidOrder(OrderBook orderBook,Order newOrder) throws Exception {
 		if(newOrder.getPrice() <= 0) {
 			Exception invalidPriceException = new InvalidPriceException();
 			logger.error("error in add bid order",invalidPriceException);
 			throw invalidPriceException;
 		}
-		return bidOrders.add(newOrder);
+		return orderBook.getBidOrders().add(newOrder);
 	}
 	
-	public void cancelOrder(Order orderToBeCancel) {
+	public void cancelOrder(OrderBook orderBook,Order orderToBeCancel) {
 		TransactionType transactionType = orderToBeCancel.getTransactionType();
 		Queue<Order> queue = null;
 		if(transactionType.equals(TransactionType.BUY)) {
-			queue = this.getBidOrders();
-			deleteOrder(orderToBeCancel, queue);
+			queue = orderBook.getBidOrders();
+			deleteOrder(orderBook,orderToBeCancel, queue);
 		}
 		else if(transactionType.equals(TransactionType.SELL)) {
-			queue = this.getAskOrders();
-			deleteOrder(orderToBeCancel, queue);
+			queue = orderBook.getAskOrders();
+			deleteOrder(orderBook, orderToBeCancel, queue);
 		}
 	}
-
-	private void deleteOrder(Order orderToBeCancel, Queue<Order> queue) {
+	private void deleteOrder(OrderBook orderBook,Order orderToBeCancel, Queue<Order> queue) {
 		Optional<Order> optional = queue.stream().filter(order -> order.equals(orderToBeCancel)).findFirst();
 		if(optional.isPresent()) {
-			this.getBidOrders().remove(optional.get());
+			orderBook.getBidOrders().remove(optional.get());
 		}
 	}
+	
 	
 	/*
 	 * Summary Data Converted into Immutable Structure so that consumers of this api don't intentionally/accidently modify the order.
 	 */
-	public Map<String, Map<String,Double>> getSummary() {
+	public Map<String, Map<String,Double>> getSummary(OrderBook orderBook) {
 		Map<String, Map<String,Double>> summaryMap = new LinkedHashMap<>();
 		Map<String,Double> bidOrderMap = new LinkedHashMap<>();
-		this.getBidOrders().stream().forEach(order -> {
+		orderBook.getBidOrders().stream().forEach(order -> {
 			bidOrderMap.put(order.getId()+"-"+order.getQuantity().toString() , order.getPrice());
 		});
 		summaryMap.put(TransactionType.BUY.name(), bidOrderMap);
 
 		Map<String,Double> askOrderMap = new LinkedHashMap<>();
-		this.getAskOrders().stream().forEach(order -> {
+		orderBook.getAskOrders().stream().forEach(order -> {
 			askOrderMap.put(order.getId()+"-"+order.getQuantity().toString() , order.getPrice());
 		});
 		summaryMap.put(TransactionType.SELL.name(), askOrderMap);
 		return summaryMap;
 	}
-
-	@Override
-	public String toString() {
-		return "OrderBook [stock=" + stock + ", bidOrders=" + bidOrders + ", askOrders=" + askOrders + "]";
-	}
-	
-	
 }

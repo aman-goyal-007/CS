@@ -1,7 +1,6 @@
 package com.cs.aman.ordermatching.entity;
 
 import java.math.BigInteger;
-import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cs.aman.ordermatching.enums.OrderType;
@@ -21,7 +20,7 @@ public class Order {
 	
 	private double price;
 	
-	private final LocalDateTime entryTime;
+	private final long entryTime;
 	
 
 	public Order(TransactionType transactionType, OrderType orderType, BigInteger quantity, double price) {
@@ -31,7 +30,7 @@ public class Order {
 		this.orderType = orderType;
 		this.quantity = quantity;
 		this.price = price;
-		this.entryTime = LocalDateTime.now();
+		this.entryTime = System.nanoTime(); // using nano time precision. We might opt to choose more precise way to differentiate order.
 	}
 
 
@@ -72,7 +71,7 @@ public class Order {
 
 
 
-	public LocalDateTime getEntryTime() {
+	public long getEntryTime() {
 		return entryTime;
 	}
 

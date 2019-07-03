@@ -20,17 +20,21 @@ import com.cs.aman.ordermatching.entity.Stock;
 import com.cs.aman.ordermatching.enums.OrderType;
 import com.cs.aman.ordermatching.enums.TransactionType;
 import com.cs.aman.ordermatching.exception.InvalidPriceException;
+import com.cs.aman.ordermatching.service.OrderBookService;
+import com.cs.aman.ordermatching.service.impl.OrderBookServiceImpl;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class OrderMatchingApplicationTests {
 	
+	OrderBookService orderBookService;
 
 	OrderBook orderBook;
 	
 	@Before
 	public void contextLoads() {
-		orderBook = new OrderBook(new Stock("ABC", "ABC Name", new BigInteger("10"), 10));
+		orderBookService = new OrderBookServiceImpl();
+		orderBook = orderBookService.createOrderBook(new Stock("ABC", "ABC Name", new BigInteger("10"), 10));
 		
 	}
 
@@ -44,7 +48,7 @@ public class OrderMatchingApplicationTests {
 	public void testInvalidPriceException() throws Exception {
 		//System.out.println(orderBook);
 		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), -1);
-		orderBook.addBidOrder(bidOrder);
+		orderBookService.addBidOrder(orderBook,bidOrder);
 	}
 
 	
@@ -67,27 +71,39 @@ public class OrderMatchingApplicationTests {
 	}
 	
 	@Test
-	public void testMarketAskOrderSorting() throws Exception {
+	public void testMarketAskOrderSortingForMarketOrder() throws Exception {
 		Order orderOne = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
 		Order orderTwo = new Order(TransactionType.SELL, OrderType.MARKET, new BigInteger("1"), 11);
 		Order orderThree = new Order(TransactionType.SELL, OrderType.MARKET, new BigInteger("1"), 10);
-		orderBook.addAskOrder(orderOne);
-		orderBook.addAskOrder(orderTwo);
-		orderBook.addAskOrder(orderThree);
+		orderBookService.addAskOrder(orderBook,orderOne);
+		orderBookService.addAskOrder(orderBook,orderTwo);
+		orderBookService.addAskOrder(orderBook,orderThree);
 		assertEquals(orderThree, orderBook.getAskOrders().poll());
 		assertEquals(orderTwo, orderBook.getAskOrders().poll());
 		assertEquals(orderOne, orderBook.getAskOrders().poll());
 	}
-	
+
+	@Test
+	public void testMarketAskOrderSortingForLimitOrderTimeBased() throws Exception {
+		Order orderOne = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
+		Order orderThree = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
+		orderBookService.addAskOrder(orderBook,orderOne);
+		orderBookService.addAskOrder(orderBook,orderTwo);
+		orderBookService.addAskOrder(orderBook,orderThree);
+		assertEquals(orderOne, orderBook.getAskOrders().poll());
+		assertEquals(orderTwo, orderBook.getAskOrders().poll());
+		assertEquals(orderThree, orderBook.getAskOrders().poll());
+	}
 	
 	@Test
 	public void testMarketBidOrderSorting() throws Exception {
 		Order orderOne = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
 		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 11);
 		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
-		orderBook.addBidOrder(orderOne);
-		orderBook.addBidOrder(orderTwo);
-		orderBook.addBidOrder(orderThree);
+		orderBookService.addBidOrder(orderBook,orderOne);
+		orderBookService.addBidOrder(orderBook,orderTwo);
+		orderBookService.addBidOrder(orderBook,orderThree);
 		assertEquals(orderTwo, orderBook.getBidOrders().poll());
 		assertEquals(orderThree, orderBook.getBidOrders().poll());
 		assertEquals(orderOne, orderBook.getBidOrders().poll());
@@ -98,9 +114,9 @@ public class OrderMatchingApplicationTests {
 		Order orderOne = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
 		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 11);
 		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
-		orderBook.addBidOrder(orderOne);
-		orderBook.addBidOrder(orderTwo);
-		orderBook.addBidOrder(orderThree);
+		orderBookService.addBidOrder(orderBook,orderOne);
+		orderBookService.addBidOrder(orderBook,orderTwo);
+		orderBookService.addBidOrder(orderBook,orderThree);
 		
 		orderBook.cancelOrder(orderTwo);
 		assertEquals(orderThree, orderBook.getBidOrders().poll());
@@ -111,9 +127,9 @@ public class OrderMatchingApplicationTests {
 	@Test
 	public void testMatchingEngineAllOrderMatched() throws Exception {
 		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 12);
-		orderBook.addBidOrder(bidOrder);
+		orderBookService.addBidOrder(orderBook,bidOrder);
 		Order askOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
-		orderBook.addAskOrder(askOrder);
+		orderBookService.addAskOrder(orderBook,askOrder);
 		//System.out.println("Before Order Execution " +orderBook);
 		ExecutionEngine executionEngine = new BasicOrderExecutionAlgo();
 		executionEngine.executeOrderBook(orderBook);

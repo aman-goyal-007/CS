@@ -12,6 +12,10 @@ import com.cs.aman.ordermatching.entity.Order;
 import com.cs.aman.ordermatching.entity.OrderBook;
 import com.cs.aman.ordermatching.enums.OrderType;
 
+/**
+ * @author amagoyal
+ *
+ */
 public class BasicOrderExecutionAlgo implements ExecutionEngine{
 	private static final String matchedOrderLogPrefix = "Matched Order : ";
 	Logger logger = LoggerFactory.getLogger(BasicOrderExecutionAlgo.class);
@@ -34,12 +38,14 @@ public class BasicOrderExecutionAlgo implements ExecutionEngine{
 			double bidPrice = bidOrder.getPrice();
 			double askPrice = askOrder.getPrice();
 			
+			// Setting the price of bid and ask same for Market orders. 
 			if(OrderType.MARKET.equals(bidOrderType)) {
 				bidPrice = askPrice;
 			}else if(OrderType.MARKET.equals(askOrderType)) {
 				askPrice = bidPrice;
 			}
 			
+			// Process order only if bid price is more or same to asking price
 			if(bidPrice >= askPrice) {
 				
 				processCurrentMatched(allBidOrders, allAskOrders, bidOrder, askOrder, bidQuantity, askQuantity,
@@ -59,14 +65,16 @@ public class BasicOrderExecutionAlgo implements ExecutionEngine{
 	}
 
 
+	// To Do:  This method should not accept these many numbers of argument. This needs to break it in to sub class.
 	private void processCurrentMatched(Queue<Order> allBidOrders, Queue<Order> allAskOrders, Order bidOrder,
 			Order askOrder, BigInteger bidQuantity, BigInteger askQuantity, double bidPrice, double askPrice) {
-		if(bidQuantity.equals(askQuantity)) {
+		
+		if(bidQuantity.equals(askQuantity)) { // if order quantities are matched for both bid and ask, then process whole order
 			allQuantitiesMatched(allBidOrders, allAskOrders, bidPrice, askPrice);
-		}else if(bidQuantity.compareTo(askQuantity) > 1) {
+		}else if(bidQuantity.compareTo(askQuantity) > 1) { // processing partial order
 			reduceMatchedBidQuantity(allBidOrders, allAskOrders, bidOrder, bidQuantity, askQuantity, bidPrice,
 					askPrice);
-		}else if(bidQuantity.compareTo(askQuantity) < 1) {
+		}else if(bidQuantity.compareTo(askQuantity) < 1) { // processing partial order
 			reduceMatchedAskQuantities(allBidOrders, allAskOrders, askOrder, bidQuantity, askQuantity, bidPrice,
 					askPrice);
 			

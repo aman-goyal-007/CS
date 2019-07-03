@@ -78,8 +78,8 @@ public class OrderMatchingApplicationTests {
 		orderBookService.addAskOrder(orderBook,orderOne);
 		orderBookService.addAskOrder(orderBook,orderTwo);
 		orderBookService.addAskOrder(orderBook,orderThree);
-		assertEquals(orderThree, orderBook.getAskOrders().poll());
 		assertEquals(orderTwo, orderBook.getAskOrders().poll());
+		assertEquals(orderThree, orderBook.getAskOrders().poll());
 		assertEquals(orderOne, orderBook.getAskOrders().poll());
 	}
 
@@ -94,6 +94,19 @@ public class OrderMatchingApplicationTests {
 		assertEquals(orderOne, orderBook.getAskOrders().poll());
 		assertEquals(orderTwo, orderBook.getAskOrders().poll());
 		assertEquals(orderThree, orderBook.getAskOrders().poll());
+	}
+	
+	@Test
+	public void testMarketBidOrderSortingForLimitOrderTimeBased() throws Exception {
+		Order orderOne = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
+		Order orderThree = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
+		orderBookService.addBidOrder(orderBook,orderOne);
+		orderBookService.addBidOrder(orderBook,orderTwo);
+		orderBookService.addBidOrder(orderBook,orderThree);
+		assertEquals(orderOne, orderBook.getBidOrders().poll());
+		assertEquals(orderTwo, orderBook.getBidOrders().poll());
+		assertEquals(orderThree, orderBook.getBidOrders().poll());
 	}
 	
 	@Test
@@ -117,8 +130,8 @@ public class OrderMatchingApplicationTests {
 		orderBookService.addAskOrder(orderBook,orderOne);
 		orderBookService.addAskOrder(orderBook,orderTwo);
 		orderBookService.addAskOrder(orderBook,orderThree);
-		assertEquals(orderThree, orderBook.getAskOrders().poll());
 		assertEquals(orderTwo, orderBook.getAskOrders().poll());
+		assertEquals(orderThree, orderBook.getAskOrders().poll());
 		assertEquals(orderOne, orderBook.getAskOrders().poll());
 	}
 

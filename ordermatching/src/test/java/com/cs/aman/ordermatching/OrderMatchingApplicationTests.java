@@ -47,14 +47,14 @@ public class OrderMatchingApplicationTests {
 	@Test(expected = InvalidPriceException.class)
 	public void testInvalidPriceException() throws Exception {
 		//System.out.println(orderBook);
-		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), -1);
+		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), -1);
 		orderBookService.addBidOrder(orderBook,bidOrder);
 	}
 
 	
 	@Test
 	public void testMarketBidOrderCreation() throws Exception {
-		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 12);
+		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 12);
 		orderBook.addBidOrder(bidOrder);
 		//System.out.println(bidOrder);
 		assertNotNull(orderBook.getBidOrders());
@@ -63,7 +63,7 @@ public class OrderMatchingApplicationTests {
 	
 	@Test
 	public void testMarketAskOrderCreation() throws Exception {
-		Order askOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
+		Order askOrder = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 10);
 		orderBook.addAskOrder(askOrder);
 		//System.out.println(askOrder);
 		
@@ -73,8 +73,8 @@ public class OrderMatchingApplicationTests {
 	@Test
 	public void testMarketAskOrderSortingForMarketOrder() throws Exception {
 		Order orderOne = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
-		Order orderTwo = new Order(TransactionType.SELL, OrderType.MARKET, new BigInteger("1"), 11);
-		Order orderThree = new Order(TransactionType.SELL, OrderType.MARKET, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.SELL, OrderType.MARKET, getPreviousDayPrice(), 11);
+		Order orderThree = new Order(TransactionType.SELL, OrderType.MARKET, getPreviousDayPrice(), 10);
 		orderBookService.addAskOrder(orderBook,orderOne);
 		orderBookService.addAskOrder(orderBook,orderTwo);
 		orderBookService.addAskOrder(orderBook,orderThree);
@@ -99,8 +99,8 @@ public class OrderMatchingApplicationTests {
 	@Test
 	public void testMarketBidOrderSorting() throws Exception {
 		Order orderOne = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
-		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 11);
-		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 11);
+		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 10);
 		orderBookService.addBidOrder(orderBook,orderOne);
 		orderBookService.addBidOrder(orderBook,orderTwo);
 		orderBookService.addBidOrder(orderBook,orderThree);
@@ -110,10 +110,23 @@ public class OrderMatchingApplicationTests {
 	}
 	
 	@Test
+	public void testMarketAskOrderSorting() throws Exception {
+		Order orderOne = new Order(TransactionType.SELL, OrderType.LIMIT, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.SELL, OrderType.MARKET, getPreviousDayPrice(), 11);
+		Order orderThree = new Order(TransactionType.SELL, OrderType.MARKET, getPreviousDayPrice(), 10);
+		orderBookService.addAskOrder(orderBook,orderOne);
+		orderBookService.addAskOrder(orderBook,orderTwo);
+		orderBookService.addAskOrder(orderBook,orderThree);
+		assertEquals(orderThree, orderBook.getAskOrders().poll());
+		assertEquals(orderTwo, orderBook.getAskOrders().poll());
+		assertEquals(orderOne, orderBook.getAskOrders().poll());
+	}
+
+	@Test
 	public void testMarketBidOrderCancel() throws Exception {
 		Order orderOne = new Order(TransactionType.BUY, OrderType.LIMIT, new BigInteger("1"), 10);
-		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 11);
-		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
+		Order orderTwo = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 11);
+		Order orderThree = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 10);
 		orderBookService.addBidOrder(orderBook,orderOne);
 		orderBookService.addBidOrder(orderBook,orderTwo);
 		orderBookService.addBidOrder(orderBook,orderThree);
@@ -126,15 +139,19 @@ public class OrderMatchingApplicationTests {
 
 	@Test
 	public void testMatchingEngineAllOrderMatched() throws Exception {
-		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 12);
+		Order bidOrder = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 12);
 		orderBookService.addBidOrder(orderBook,bidOrder);
-		Order askOrder = new Order(TransactionType.BUY, OrderType.MARKET, new BigInteger("1"), 10);
+		Order askOrder = new Order(TransactionType.BUY, OrderType.MARKET, getPreviousDayPrice(), 10);
 		orderBookService.addAskOrder(orderBook,askOrder);
 		//System.out.println("Before Order Execution " +orderBook);
 		ExecutionEngine executionEngine = new BasicOrderExecutionAlgo();
 		executionEngine.executeOrderBook(orderBook);
 		//System.out.println("After Order Execution " +orderBook);
 		assertTrue(true);
+	}
+	
+	private BigInteger getPreviousDayPrice() {
+		return new BigInteger("0");
 	}
 
 }
